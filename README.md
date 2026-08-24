@@ -6,7 +6,7 @@
 
 ---
 
-## 🚀 Setup Steps & Execution Guide
+##  Setup Steps & Execution Guide
 
 ### Prerequisites
 - Node.js (v18+)
@@ -37,7 +37,7 @@ The React frontend application will run on `http://localhost:3000`.
 
 ---
 
-## 🔑 Chairman Login Credentials & Seed Data
+##  Chairman Login Credentials & Seed Data
 
 ### Chairman Account Details
 - **Email**: `chairman@yarlventures.com`
@@ -56,7 +56,7 @@ Running `npm run seed` automatically initializes:
 
 ---
 
-## ⚙️ Environment Variables
+##  Environment Variables
 
 ### Backend Server (`/server/.env.example`)
 ```env
@@ -73,7 +73,7 @@ VITE_API_BASE_URL=http://localhost:5000/api
 
 ---
 
-## 🔒 How Permission Checking Works (Section 8 & F-12)
+##  How Permission Checking Works (Section 8 & F-12)
 
 The system implements strict Role-Based Access Control (RBAC) enforced on the backend via Express middleware (`permissionMiddleware.js`):
 
@@ -104,7 +104,7 @@ The system implements strict Role-Based Access Control (RBAC) enforced on the ba
 
 ---
 
-## ✅ Completed Features Checklist
+##  Completed Features Checklist
 
 - [x] **F-01**: Member account registration (email & password)
 - [x] **F-02**: JWT login & logout
@@ -126,13 +126,13 @@ The system implements strict Role-Based Access Control (RBAC) enforced on the ba
 
 ---
 
-## ❌ Incomplete Features & Known Issues
+##  Incomplete Features & Known Issues
 
 - None. All 14 required features and bonus items have been fully built, verified, and tested.
 
 ---
 
-## 🎥 Mandatory Demo Video Link
+##  Mandatory Demo Video Link
 
 - **Google Drive Link**: `[Insert your public Google Drive video link here]`  
-*(Sharing set to "Anyone with the link" as Viewer)*
+
