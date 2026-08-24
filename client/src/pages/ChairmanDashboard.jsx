@@ -11,6 +11,7 @@ const PERMISSION_OPTIONS = [
 
 const ChairmanDashboard = () => {
   const [roles, setRoles] = useState([]);
+  const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
@@ -22,26 +23,33 @@ const ChairmanDashboard = () => {
   const [creatingRole, setCreatingRole] = useState(false);
 
   // Role Assignment State
-  const [userEmailToAssign, setUserEmailToAssign] = useState('');
-  const [roleIdToAssign, setRoleIdToAssign] = useState('');
+  const [selectedUserId, setSelectedUserId] = useState('');
+  const [selectedRoleId, setSelectedRoleId] = useState('');
   const [assigning, setAssigning] = useState(false);
 
-  const fetchRoles = async () => {
+  const fetchRolesAndUsers = async () => {
     try {
       setLoading(true);
-      const res = await api.get('/officer-roles');
-      if (res.success) {
-        setRoles(res.data.roles || []);
+      const [rolesRes, appsRes] = await Promise.all([
+        api.get('/officer-roles'),
+        api.get('/applications?limit=100')
+      ]);
+
+      if (rolesRes.success) {
+        setRoles(rolesRes.data.roles || []);
+      }
+      if (appsRes.success) {
+        setApplications(appsRes.data.applications || []);
       }
     } catch (err) {
-      setError(err.message || 'Failed to fetch officer roles.');
+      setError(err.message || 'Failed to fetch administrative data.');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchRoles();
+    fetchRolesAndUsers();
   }, []);
 
   const handlePermissionToggle = (key) => {
@@ -70,7 +78,7 @@ const ChairmanDashboard = () => {
         setRoleName('');
         setRoleDesc('');
         setSelectedPermissions([]);
-        fetchRoles();
+        fetchRolesAndUsers();
       }
     } catch (err) {
       setError(err.message || 'Failed to create Officer Role.');
@@ -84,26 +92,24 @@ const ChairmanDashboard = () => {
     setError(null);
     setSuccessMsg(null);
 
-    if (!userEmailToAssign || !roleIdToAssign) {
-      setError('Please provide target user email and select an Officer Role');
+    if (!selectedUserId || !selectedRoleId) {
+      setError('Please select both a User and an Officer Role');
       return;
     }
 
     setAssigning(true);
 
     try {
-      // Find user by email first or pass user lookup
-      // We can look up user or pass email in prompt
-      // For precision, let's call get user or endpoint assign
-      // In backend we expect userId, let's look up user email
-      const memberRes = await api.get(`/applications?limit=100`); // Or look up user
-      // Let's create an helper endpoint or look up by email:
-      // Let's use user email lookup:
-      const assignRes = await api.post(`/auth/login`, { email: 'dummy', password: 'no' }).catch(() => null);
-      
-      // Let's pass userId directly. We can fetch users or provide user search:
-      // Let's fetch members/users list to select from
-      setError('Feature: Select user from below list to assign role.');
+      const res = await api.post(`/officer-roles/${selectedRoleId}/assign`, {
+        userId: selectedUserId
+      });
+
+      if (res.success) {
+        setSuccessMsg(res.message || 'Role assigned to user successfully!');
+        setSelectedUserId('');
+        setSelectedRoleId('');
+        fetchRolesAndUsers();
+      }
     } catch (err) {
       setError(err.message || 'Role assignment failed.');
     } finally {
@@ -123,7 +129,7 @@ const ChairmanDashboard = () => {
       {error && <div className="alert alert-danger">{error}</div>}
       {successMsg && <div className="alert alert-success">{successMsg}</div>}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
         {/* CREATE OFFICER ROLE FORM (F-10) */}
         <div className="card">
           <h3 className="card-title">Create New Officer Role (F-10)</h3>
@@ -251,6 +257,54 @@ const ChairmanDashboard = () => {
             </div>
           )}
         </div>
+      </div>
+
+      {/* ASSIGN ROLE TO USER CARD (F-11) */}
+      <div className="card">
+        <h3 className="card-title">Assign Officer Role to User (F-11)</h3>
+        <p style={{ color: '#64748b', fontSize: '0.85rem', marginBottom: '1rem' }}>
+          Select a registered user and assign an Officer Role to elevate them to staff status with specified permissions.
+        </p>
+
+        <form onSubmit={handleAssignRole} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '1rem', alignItems: 'end' }}>
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <label className="form-label">Select Registered User</label>
+            <select
+              className="form-select"
+              value={selectedUserId}
+              onChange={(e) => setSelectedUserId(e.target.value)}
+              required
+            >
+              <option value="">-- Select User --</option>
+              {applications.map((app) => (
+                <option key={app.userId?._id || app._id} value={app.userId?._id}>
+                  {app.fullName || app.companyName} ({app.email})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <label className="form-label">Select Officer Role</label>
+            <select
+              className="form-select"
+              value={selectedRoleId}
+              onChange={(e) => setSelectedRoleId(e.target.value)}
+              required
+            >
+              <option value="">-- Select Role --</option>
+              {roles.map((role) => (
+                <option key={role._id} value={role._id}>
+                  {role.name} ({role.permissions.length} permissions)
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <button type="submit" className="btn btn-primary" disabled={assigning}>
+            {assigning ? 'Assigning...' : 'Assign Role'}
+          </button>
+        </form>
       </div>
     </div>
   );
