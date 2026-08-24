@@ -1,4 +1,4 @@
-# Member Management System (Mini)
+# Member Management System 
 
 **Document ID**: YV-HR-INT-MERN-01  
 **Candidate Take-Home Assignment**: Software Engineer Internship (MERN Stack)  
