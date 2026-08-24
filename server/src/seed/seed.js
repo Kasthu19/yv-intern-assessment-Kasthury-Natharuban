@@ -7,13 +7,23 @@ const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const MembershipType = require('../models/MembershipType');
 const OfficerRole = require('../models/OfficerRole');
-const { VALID_PERMISSIONS } = require('../models/OfficerRole');
 
 const seedData = async () => {
   try {
     const mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/member_management';
     console.log(`[Seed] Connecting to database: ${mongoUri}`);
-    await mongoose.connect(mongoUri);
+
+    try {
+      await mongoose.connect(mongoUri, { serverSelectionTimeoutMS: 3000 });
+      console.log(`[Seed] Connected to local MongoDB`);
+    } catch (dbErr) {
+      console.warn(`[Seed Warning] Local MongoDB service offline (${dbErr.message}). Starting In-Memory MongoDB...`);
+      const { MongoMemoryServer } = require('mongodb-memory-server');
+      const mongod = await MongoMemoryServer.create();
+      const uri = mongod.getUri();
+      await mongoose.connect(uri);
+      console.log(`[Seed] Connected to In-Memory MongoDB`);
+    }
 
     // 1. Seed Chairman Account (F-14)
     const chairmanEmail = 'chairman@yarlventures.com';
@@ -35,7 +45,7 @@ const seedData = async () => {
       console.log('ℹ️ Chairman account already exists.');
     }
 
-    // 2. Seed Membership Types (F-14 requirement: at least 3 membership types)
+    // 2. Seed Membership Types (F-14 requirement)
     const initialTypes = [
       {
         name: 'Individual Standard',
@@ -64,9 +74,9 @@ const seedData = async () => {
         { upsert: true, new: true }
       );
     }
-    console.log('✅ Seeded 3 membership types (Individual Standard, Individual Premium, Corporate Gold)');
+    console.log('✅ Seeded 3 membership types');
 
-    // 3. Seed Default Officer Role (e.g. Senior Application Reviewer) for easy evaluation demo
+    // 3. Seed Default Officer Role
     const defaultRoleName = 'Senior Application Reviewer';
     let reviewerRole = await OfficerRole.findOne({ name: defaultRoleName });
     if (!reviewerRole) {
