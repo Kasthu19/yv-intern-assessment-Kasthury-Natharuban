@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
+  const location = useLocation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
+  const [successMsg, setSuccessMsg] = useState(location.state?.message || null);
   const [submitting, setSubmitting] = useState(false);
 
   const { login } = useAuth();
@@ -14,6 +16,7 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
+    setSuccessMsg(null);
     setSubmitting(true);
 
     try {
@@ -41,6 +44,7 @@ const Login = () => {
           Member Management System — Yarl Ventures
         </p>
 
+        {successMsg && <div className="alert alert-success">{successMsg}</div>}
         {error && <div className="alert alert-danger">{error}</div>}
 
         <form onSubmit={handleSubmit}>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import api from '../services/api';
 
 const Register = () => {
   const [fullName, setFullName] = useState('');
@@ -10,7 +10,6 @@ const Register = () => {
   const [fieldErrors, setFieldErrors] = useState([]);
   const [submitting, setSubmitting] = useState(false);
 
-  const { register } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -20,8 +19,13 @@ const Register = () => {
     setSubmitting(true);
 
     try {
-      await register(fullName, email, password);
-      navigate('/dashboard');
+      const response = await api.post('/auth/register', { fullName, email, password });
+      if (response.success) {
+        // Redirect to Login page with success state
+        navigate('/login', {
+          state: { message: 'Registration successful! Please sign in with your email and password.' }
+        });
+      }
     } catch (err) {
       setError(err.message || 'Registration failed');
       if (err.details) {
